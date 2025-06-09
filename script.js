@@ -1,227 +1,78 @@
 // Smooth scrolling for navigation links
-document.addEventListener('DOMContentLoaded', function() {
-    // Navbar scroll effect
-    const navbar = document.querySelector('.custom-navbar');
-    
-    window.addEventListener('scroll', function() {
-        if (window.scrollY > 100) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
+document.addEventListener('DOMContentLoaded', () => {
+    const navbar = document.querySelector('.navbar');
+    window.addEventListener('scroll', () => window.scrollY > 100 ? navbar.classList.add('scrolled') : navbar.classList.remove('scrolled'));
+
+    document.querySelectorAll('a[href^="#"]').forEach(link => link.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(link.getAttribute('href'));
+        if (target) window.scrollTo({ top: target.offsetTop - 80, behavior: 'smooth' });
+    }));
+
+    document.querySelectorAll('.btn-primary').forEach(btn => {
+        if (btn.textContent.trim() === 'Book Now') btn.addEventListener('click', e => {
+            e.preventDefault();
+            const card = btn.closest('.card');
+            showModal('packageModal', card.querySelector('.card-title').textContent, card.querySelector('.badge').textContent);
+        });
+    });
+
+    document.querySelectorAll('.service-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const title = card.querySelector('.card-title').textContent;
+            const desc = card.querySelector('.card-text').textContent;
+            const icon = card.querySelector('.service-icon').innerHTML;
+            showServiceModal(title, desc, icon);
+        });
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-5px)';
+            card.style.boxShadow = '0 10px 30px rgba(31, 41, 55, 0.15)';
+        });
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+            card.style.boxShadow = '0 5px 15px rgba(31, 41, 55, 0.1)';
+        });
+    });
+
+    ['newsletterForm', 'contactForm'].forEach(formId => {
+        const form = document.getElementById(formId);
+        if (form) form.addEventListener('submit', e => {
+            e.preventDefault();
+            alert(formId === 'newsletterForm' ? 
+                `Thank you for subscribing with ${e.target.querySelector('input[type="email"]').value}!` : 
+                'Thank you for your message! We will get back to you soon.');
+            e.target.reset();
+        });
+    });
+
+    document.querySelectorAll('.nav-link').forEach(link => link.addEventListener('click', () => {
+        const navbarCollapse = document.querySelector('.navbar-collapse');
+        if (navbarCollapse.classList.contains('show')) new bootstrap.Collapse(navbarCollapse).hide();
+    }));
+
+    const statsObserver = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting) {
+            document.querySelectorAll('.stat-item h3').forEach(counter => {
+                const target = parseInt(counter.textContent.replace('+', ''));
+                let current = 0;
+                const increment = target / 100;
+                const timer = setInterval(() => {
+                    current += increment;
+                    if (current >= target) {
+                        counter.textContent = target + '+';
+                        clearInterval(timer);
+                    } else counter.textContent = Math.floor(current) + '+';
+                }, 20);
+            });
+            statsObserver.disconnect();
         }
-    });
-
-    // Smooth scrolling for anchor links
-    const links = document.querySelectorAll('a[href^="#"]');
-    
-    links.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const targetId = this.getAttribute('href');
-            const targetSection = document.querySelector(targetId);
-            
-            if (targetSection) {
-                const offsetTop = targetSection.offsetTop - 80; // Account for fixed navbar
-                
-                window.scrollTo({
-                    top: offsetTop,
-                    behavior: 'smooth'
-                });
-            }
-        });
-    });
-
-    // Fade in animation on scroll
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-            }
-        });
-    }, observerOptions);
-
-    // Observe elements for fade-in animation
-    const fadeElements = document.querySelectorAll('.package-card, .destination-card, .review-card');
-    fadeElements.forEach(el => {
-        el.classList.add('fade-in');
-        observer.observe(el);
-    });
-
-    // Package card hover effects
-    const packageCards = document.querySelectorAll('.package-card');
-    packageCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-10px) scale(1.02)';
-        });
-        
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0) scale(1)';
-        });
-    });
-
-    // Destination card interactions
-    const destinationCards = document.querySelectorAll('.destination-card');
-    destinationCards.forEach(card => {
-        card.addEventListener('click', function() {
-            const destination = this.querySelector('h3').textContent;
-            alert(`Explore ${destination} - Coming soon!`);
-        });
-    });
-
-    // Newsletter form submission
-    const newsletterForm = document.querySelector('.newsletter-form');
-    if (newsletterForm) {
-        newsletterForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const email = this.querySelector('input[type="email"]').value;
-            if (email) {
-                // Simulate form submission
-                alert('Thank you for subscribing! We\'ll keep you updated with the latest travel deals.');
-                this.querySelector('input[type="email"]').value = '';
-            }
-        });
-    }
-
-    // Book Now button interactions
-    const bookButtons = document.querySelectorAll('.package-card .btn-primary');
-    bookButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const packageTitle = this.closest('.package-card').querySelector('.package-title').textContent;
-            const packagePrice = this.closest('.package-card').querySelector('.package-price').textContent;
-            
-            alert(`Booking ${packageTitle} package for ${packagePrice}. Redirecting to booking form...`);
-        });
-    });
-
-    // Contact form interactions (if any contact forms are added)
-    const contactForms = document.querySelectorAll('form:not(.newsletter-form)');
-    contactForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Thank you for your message! We\'ll get back to you soon.');
-        });
-    });
-
-    // Parallax effect for hero section
-    window.addEventListener('scroll', function() {
-        const scrolled = window.pageYOffset;
-        const heroSection = document.querySelector('.hero-section');
-        
-        if (heroSection) {
-            const rate = scrolled * -0.5;
-            heroSection.style.transform = `translateY(${rate}px)`;
-        }
-    });
-
-    // Mobile menu auto-close
-    const navLinks = document.querySelectorAll('.nav-link');
-    const navbarCollapse = document.querySelector('.navbar-collapse');
-    
-    navLinks.forEach(link => {
-        link.addEventListener('click', function() {
-            if (navbarCollapse.classList.contains('show')) {
-                const bsCollapse = new bootstrap.Collapse(navbarCollapse);
-                bsCollapse.hide();
-            }
-        });
-    });
-
-    // Stats counter animation
-    function animateCounters() {
-        const counters = document.querySelectorAll('.stat-item h3');
-        
-        counters.forEach(counter => {
-            const target = parseInt(counter.textContent.replace('+', ''));
-            const increment = target / 100;
-            let current = 0;
-            
-            const timer = setInterval(() => {
-                current += increment;
-                if (current >= target) {
-                    counter.textContent = target + '+';
-                    clearInterval(timer);
-                } else {
-                    counter.textContent = Math.floor(current) + '+';
-                }
-            }, 20);
-        });
-    }
-
-    // Trigger counter animation when stats section is visible
-    const statsObserver = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                animateCounters();
-                statsObserver.disconnect();
-            }
-        });
     }, { threshold: 0.5 });
 
     const statsSection = document.querySelector('.journey-stats');
-    if (statsSection) {
-        statsObserver.observe(statsSection);
-    }
+    if (statsSection) statsObserver.observe(statsSection);
 
-    // Search functionality (basic frontend implementation)
-    function implementSearch() {
-        const searchInput = document.createElement('input');
-        searchInput.type = 'text';
-        searchInput.placeholder = 'Search destinations...';
-        searchInput.className = 'form-control search-input';
-        
-        // Add search functionality if needed
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const destinationCards = document.querySelectorAll('.destination-card');
-            
-            destinationCards.forEach(card => {
-                const title = card.querySelector('h3').textContent.toLowerCase();
-                const description = card.querySelector('p').textContent.toLowerCase();
-                
-                if (title.includes(searchTerm) || description.includes(searchTerm)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = searchTerm === '' ? 'block' : 'none';
-                }
-            });
-        });
-    }
-
-    // Initialize additional features
-    implementSearch();
-
-    // Loading screen fade out
-    window.addEventListener('load', function() {
-        document.body.classList.add('loaded');
-        
-        // Trigger initial animations
-        setTimeout(() => {
-            const heroElements = document.querySelectorAll('.hero-title, .hero-subtitle, .hero-buttons');
-            heroElements.forEach((el, index) => {
-                setTimeout(() => {
-                    el.style.opacity = '1';
-                    el.style.transform = 'translateY(0)';
-                }, index * 200);
-            });
-        }, 500);
-    });
-
-    // Error handling for images
-    const images = document.querySelectorAll('img');
-    images.forEach(img => {
-        img.addEventListener('error', function() {
-            this.src = 'https://via.placeholder.com/400x300/cccccc/666666?text=Image+Not+Available';
-        });
-    });
+    document.querySelectorAll('img').forEach(img => img.addEventListener('error', () => 
+        img.src = 'https://via.placeholder.com/400x300/cccccc/666666?text=Image+Not+Available'));
 
     console.log('Adventure Aura website loaded successfully!');
 });
@@ -259,3 +110,149 @@ window.addEventListener('scroll', debounce(revealOnScroll, 10));
 
 // Initialize reveal on load
 document.addEventListener('DOMContentLoaded', revealOnScroll);
+
+function animateCounters() {
+    document.querySelectorAll('.stat-item h3').forEach(counter => {
+        const target = parseInt(counter.textContent.replace('+', ''));
+        let current = 0;
+        const increment = target / 100;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                counter.textContent = target + '+';
+                clearInterval(timer);
+            } else {
+                counter.textContent = Math.floor(current) + '+';
+            }
+        }, 20);
+    });
+}
+
+const createModal = (id, content) => {
+    document.body.insertAdjacentHTML('beforeend', `<div class="modal fade" id="${id}" tabindex="-1">${content}</div>`);
+    new bootstrap.Modal(document.getElementById(id)).show();
+    document.getElementById(id).addEventListener('hidden.bs.modal', function() { this.remove(); });
+};
+
+const showModal = (id, title, price) => createModal(id, `
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Book ${title}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4"><span class="badge bg-primary fs-5">${price}</span></div>
+                <form id="bookingForm" class="mt-4">
+                    <div class="mb-3">
+                        <label class="form-label">Number of Travelers</label>
+                        <input type="number" class="form-control" min="1" max="8" value="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Preferred Date</label>
+                        <input type="date" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Special Requirements</label>
+                        <textarea class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="submitBooking()">Confirm Booking</button>
+            </div>
+        </div>
+    </div>`);
+
+const showServiceModal = (title, description, icon) => createModal('serviceModal', `
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">${title}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-4"><div class="service-icon mx-auto">${icon}</div></div>
+                <p class="mb-4">${description}</p>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center d-flex flex-column justify-content-between">
+                                <div>
+                                    <h6 class="mb-2">Standard Package</h6>
+                                    <p class="text-muted mb-3">Basic service features</p>
+                                </div>
+                                <button class="btn btn-outline-primary rounded-pill" onclick="selectService('standard', '${title}')">Select</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body text-center d-flex flex-column justify-content-between">
+                                <div>
+                                    <h6 class="mb-2">Premium Package</h6>
+                                    <p class="text-muted mb-3">Enhanced features & priority support</p>
+                                </div>
+                                <button class="btn btn-primary rounded-pill" onclick="selectService('premium', '${title}')">Select</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`);
+
+const submitBooking = () => {
+    const form = document.getElementById('bookingForm');
+    if (form.checkValidity()) {
+        alert('Booking submitted successfully! We will contact you shortly with confirmation details.');
+        bootstrap.Modal.getInstance(document.getElementById('packageModal')).hide();
+    } else form.reportValidity();
+};
+
+const selectService = (package, service) => createModal('serviceFormModal', `
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">${package} Package - ${service}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="serviceBookingForm">
+                    <div class="mb-3">
+                        <label class="form-label">Your Name</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Preferred Date</label>
+                        <input type="date" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Additional Requirements</label>
+                        <textarea class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="submitServiceBooking('${package}', '${service}')">Submit Request</button>
+            </div>
+        </div>
+    </div>`);
+
+const submitServiceBooking = (package, service) => {
+    const form = document.getElementById('serviceBookingForm');
+    if (form.checkValidity()) {
+        alert(`Thank you for selecting the ${package} package for ${service}. Our team will contact you shortly.`);
+        bootstrap.Modal.getInstance(document.getElementById('serviceFormModal')).hide();
+    } else form.reportValidity();
+};
